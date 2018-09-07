@@ -1,0 +1,23 @@
+{
+  "name": "sofiapi",
+  "version": "1.0.0",
+  "description": "Sofiapi is a simple, opinionated, fast, and integrated api server",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "api",
+    "server"
+  ],
+  "author": "Anthony Valeri",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.6.1",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.3",
+    "password-generator": "^2.2.0",
+    "strict-password-generator": "^1.1.1",
+    "tedious": "^2.6.1"
+  }
+}

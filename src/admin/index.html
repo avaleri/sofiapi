@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+    <body>
+
+    <div id="app">
+        <table>
+            <thead>
+                <tr>
+                    <td>
+                        RouteID
+                    </td>
+                    <td>
+                        AppName
+                    </td>
+                    <td>
+                        RoutePath
+                    </td>
+                    <td>
+                        RouteCommand
+                    </td>
+                    <td>
+                        Allow No Parameters
+                    </td>                    
+                    <td>
+                        PublicRoute
+                    </td>
+                    <td>
+                        PermissionList
+                    </td>
+                    <td>
+                        CreateDt
+                    </td>
+                    <td>
+                        CreatedBy
+                    </td>
+                    <td>
+                        ModifiedDt
+                    </td>
+                    <td>
+                        Modified By
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <template id="row">
+                    <tr>
+                        <td>
+
+                        </td>
+                        <td>
+                            
+                        </td>
+                        <td>
+                           
+                        </td>
+                        <td>
+                           
+                        </td>
+                        <td>
+                           
+                        </td>
+                        <td>
+                           
+                        </td>
+                        <td>
+                           
+                        </td>
+                        <td>
+                            
+                        </td>
+                        <td>
+                            
+                        </td>
+                        <td>
+                           
+                        </td>
+                        <td>
+                            
+                        </td>
+                        <td>
+                            <input type="button"  data-cmd="Edit" value="Edit" />
+                            <input type="button" data-cmd="Delete" value="Delete" />
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+    (
+        function(){
+
+            function btnEdit_Click(ele) {
+                console.log('btnEdit_Click placeholder');
+            }
+
+            function btnDelete_Click(ele) {
+                console.log('btnDelete_Click placeholder');
+            }
+
+            var fetchRoutes = '/api/routes/getAll';
+            fetch(fetchRoutes).then(function(response) {
+                    var responseJson = response.json();
+                    responseJson.then(function (result) {
+                        
+                        if(result && result.length > 0) {
+                            var template = document.querySelector('#row');
+                            
+                            for(let i = 0; i < result.length; i++) {
+                                var route = result[i];
+                                var clone = template.content.cloneNode(true);
+                                var cells = clone.querySelectorAll('td');
+                                var cellIndex = 0;
+                                var btnEdit = clone.querySelector('input[data-cmd="Edit"]');
+                                var btnDelete = clone.querySelector('input[data-cmd="Delete"]');
+                                cells[cellIndex++].textContent = route.RouteID;
+                                cells[cellIndex++].textContent = route.AppName;
+                                cells[cellIndex++].textContent = route.RoutePath;
+                                cells[cellIndex++].textContent = route.RouteCommand;
+                                cells[cellIndex++].textContent = route.AllowNoParameters;
+                                cells[cellIndex++].textContent = route.PublicRoute;
+                                cells[cellIndex++].textContent = route.PermissionList;
+                                cells[cellIndex++].textContent = route.CreateDt ? new Date(route.CreateDt).toLocaleDateString('en-US', {hour12: true}) + ' ' + new Date(route.CreateDt).toLocaleTimeString('en-US', {hour12: true}) : '';
+                                cells[cellIndex++].textContent = route.CreatedBy;
+                                cells[cellIndex++].textContent = route.ModifiedDt;
+                                cells[cellIndex++].textContent = route.ModifiedBy;
+                                btnEdit.onclick = btnEdit_Click;
+                                btnDelete.onclick = btnDelete_Click;
+                                template.parentNode.appendChild(clone);
+                            }
+                    }
+                }, function(err) {
+                    alert(err);
+                });
+            });
+        }
+    )()
+    </script>
+    </body>
+</html>
