@@ -83,6 +83,47 @@
                         </td>
                     </tr>
                 </template>
+                <template id="rowEdit">
+                    <tr>
+                        <td>
+                            <span id="lblRouteID"></span>
+                        </td>
+                        <td>
+                            <input id="txtAppName" type="text" />
+                        </td>
+                        <td>
+                            <input id="txtRoutePath" type="text" />
+                        </td>
+                        <td>
+                            <input id="txtRouteCommand" type="text" />
+                        </td>
+                        <td>
+                            <input id="chkAllowNoParameters" type="checkbox" />
+                        </td>
+                        <td>
+                            <input id="chkPublicRoute" type="checkbox" />
+                        </td>
+                        <td>
+                            <input id="txtPermissionList" type="text" />
+                        </td>
+                        <td>
+                            <span id="lblCreateDt"></span>
+                        </td>
+                        <td>
+                            <span id="lblCreatedBy"></span>
+                        </td>
+                        <td>
+                            <span id="lblModifiedDt"></span>
+                        </td>
+                        <td>
+                            <span id="lblModifiedBy"></span>
+                        </td>
+                        <td>
+                            <input type="button" data-cmd="Update" value="Update" />
+                            <input type="button" data-cmd="Cancel" value="Cancel" />
+                        </td>
+                    </tr>                        
+                </template>
             </tbody>
         </table>
     </div>
@@ -91,51 +132,175 @@
     (
         function(){
 
+            function btnUpdate_Click(ele) {
+                console.log('btnUpdate_Click');
+                var row = ele.parentNode.parentNode;
+
+                var updateData = {};
+                var routeID = row.querySelector('#lblRouteID');
+                var appName = row.querySelector('#txtAppName');
+                var routePath = row.querySelector('#txtRoutePath');
+                var routeCommand = row.querySelector('#txtRouteCommand');
+                var allowNoParameters = row.querySelector('#chkAllowNoParameters');
+                var publicRoute = row.querySelector('#chkPublicRoute');
+                var permissionList = row.querySelector('#txtPermissionList');
+
+                updateData.RouteID = routeID.textContent;
+                updateData.AppName = appName.value;
+                updateData.RoutePath = routePath.value;
+                updateData.RouteCommand = routeCommand.value;
+                updateData.AllowNoParameters = false;
+                if(allowNoParameters.checked) {
+                    updateData.AllowNoParameters = true;
+                }
+
+                updateData.PublicRoute = false;
+                if(publicRoute.checked) {
+                    updateData.PublicRoute = true;
+                }
+
+                updateData.PermissionList = permissionList.value;
+
+                console.log(updateData);
+
+            }
+
+            function btnCancel_Click(ele) {
+                var template = GetDisplayTemplate();
+                var clone = template.content.cloneNode(true);
+                var routeID = ele.parentNode.parentNode.querySelector('#lblRouteID');
+                var routeData = JSON.parse(routeID.getAttribute('data-route'));
+                var clone = BindDisplayTemplate(template, routeData);
+                ele.parentNode.parentNode.replaceWith(clone);//, template.parentNode.children[2]); // swap out template
+            }
+
             function btnEdit_Click(ele) {
-                console.log('btnEdit_Click placeholder');
+                var data = JSON.parse(ele.parentNode.parentNode.children[0].getAttribute('data-route'));
+                var template = GetEditTemplate();
+                var clone = BindEditTemplate(template,data);
+                ele.parentNode.parentNode.replaceWith(clone);//, template.parentNode.children[2]); // swap out template
             }
 
             function btnDelete_Click(ele) {
                 console.log('btnDelete_Click placeholder');
+                console.log(ele.parentNode.parentNode); // first parentNode is td, second parentNode is tr.
+            }
+
+            function GetTemplate(querySelector) {
+                let template = document.querySelector(querySelector);
+                return template;
+            }
+            
+            function GetDisplayTemplate() {
+                return GetTemplate('#row');
+            }
+
+            function GetEditTemplate() {
+                return GetTemplate('#rowEdit');
+            }
+
+            function BindEditTemplate(template, data) {
+                var clone = template.content.cloneNode(true);
+                
+                var routeID = clone.querySelector('#lblRouteID');
+                var appName = clone.querySelector('#txtAppName');
+                var routePath = clone.querySelector('#txtRoutePath');
+                var routeCommand = clone.querySelector('#txtRouteCommand');
+                var allowNoParameters = clone.querySelector('#chkAllowNoParameters');
+                var publicRoute = clone.querySelector('#chkPublicRoute');
+                var permissionList = clone.querySelector('#txtPermissionList');
+                var createdBy = clone.querySelector('#lblCreatedBy');
+                var createDt = clone.querySelector('#lblCreateDt');
+                var modifiedDt = clone.querySelector('#lblModifiedDt');
+                var modifiedBy = clone.querySelector('#lblModifiedBy');
+                
+                routeID.textContent = data.RouteID;
+                routeID.setAttribute('data-route', JSON.stringify(data));
+
+
+                appName.value = data.AppName;
+                routePath.value = data.RoutePath;
+                routeCommand.value = data.RouteCommand;
+                allowNoParameters.checked = false;
+
+                if(data.AllowNoParameters) {
+                    allowNoParameters.checked = true;
+                }
+
+                publicRoute.checked = false;
+                if(data.PublicRoute) {
+                    publicRoute.checked = true;
+                }
+
+                permissionList.value = data.PermissionList;
+                createdBy.textContent = data.CreatedBy;
+                createDt.textContent = GetDateDisplayFormat(data.CreateDt);
+                modifiedDt.textContent = GetDateDisplayFormat(data.ModifiedDt);
+                modifiedBy.textContent = data.ModifiedBy;
+
+                var btnUpdate = clone.querySelector('input[data-cmd="Update"]');
+                var btnCancel = clone.querySelector('input[data-cmd="Cancel"]');
+
+                btnUpdate.onclick = (function() {btnUpdate_Click(btnUpdate);});
+                btnCancel.onclick = (function() {btnCancel_Click(btnCancel);});
+                return clone;
+            }
+
+            function GetDateDisplayFormat(data) {
+                var result = '';
+                if(data) {
+                    var dt = new Date(data);
+                    result = dt.toLocaleDateString('en-US', {hour12: true}) + ' ' + dt.toLocaleTimeString('en-US', {hour12: true})
+                }
+                return result;
+            }
+
+            function BindDisplayTemplate(template, data) {
+                var clone = template.content.cloneNode(true);
+                var cells = clone.querySelectorAll('td');
+                var cellIndex = 0;
+                var btnEdit = clone.querySelector('input[data-cmd="Edit"]');
+                var btnDelete = clone.querySelector('input[data-cmd="Delete"]');
+                cells[cellIndex].setAttribute('data-route', JSON.stringify(data));
+                cells[cellIndex++].textContent = data.RouteID;
+                cells[cellIndex++].textContent = data.AppName;
+                cells[cellIndex++].textContent = data.RoutePath;
+                cells[cellIndex++].textContent = data.RouteCommand;
+                cells[cellIndex++].textContent = data.AllowNoParameters;
+                cells[cellIndex++].textContent = data.PublicRoute;
+                cells[cellIndex++].textContent = data.PermissionList;
+                cells[cellIndex++].textContent = GetDateDisplayFormat(data.CreateDt);
+                cells[cellIndex++].textContent = data.CreatedBy;
+                cells[cellIndex++].textContent = data.ModifiedDt;
+                cells[cellIndex++].textContent = data.ModifiedBy;
+                btnEdit.onclick = (function() {btnEdit_Click(btnEdit);});
+                btnDelete.onclick = (function() {btnDelete_Click(btnDelete);});
+                return clone;
+            }
+
+            function BindRouteTable(routeJson) {
+                if(routeJson && routeJson.length > 0) {
+                        var template = GetDisplayTemplate();                           
+                        for(let i = 0; i < routeJson.length; i++) {
+                            var route = routeJson[i];
+                            var clone = BindDisplayTemplate(template,route);
+                            template.parentNode.appendChild(clone);
+                        }
+                    }
             }
 
             var fetchRoutes = '/api/routes/getAll';
             fetch(fetchRoutes).then(function(response) {
                     var responseJson = response.json();
                     responseJson.then(function (result) {
-                        
-                        if(result && result.length > 0) {
-                            var template = document.querySelector('#row');
-                            
-                            for(let i = 0; i < result.length; i++) {
-                                var route = result[i];
-                                var clone = template.content.cloneNode(true);
-                                var cells = clone.querySelectorAll('td');
-                                var cellIndex = 0;
-                                var btnEdit = clone.querySelector('input[data-cmd="Edit"]');
-                                var btnDelete = clone.querySelector('input[data-cmd="Delete"]');
-                                cells[cellIndex++].textContent = route.RouteID;
-                                cells[cellIndex++].textContent = route.AppName;
-                                cells[cellIndex++].textContent = route.RoutePath;
-                                cells[cellIndex++].textContent = route.RouteCommand;
-                                cells[cellIndex++].textContent = route.AllowNoParameters;
-                                cells[cellIndex++].textContent = route.PublicRoute;
-                                cells[cellIndex++].textContent = route.PermissionList;
-                                cells[cellIndex++].textContent = route.CreateDt ? new Date(route.CreateDt).toLocaleDateString('en-US', {hour12: true}) + ' ' + new Date(route.CreateDt).toLocaleTimeString('en-US', {hour12: true}) : '';
-                                cells[cellIndex++].textContent = route.CreatedBy;
-                                cells[cellIndex++].textContent = route.ModifiedDt;
-                                cells[cellIndex++].textContent = route.ModifiedBy;
-                                btnEdit.onclick = btnEdit_Click;
-                                btnDelete.onclick = btnDelete_Click;
-                                template.parentNode.appendChild(clone);
-                            }
-                    }
+                        BindRouteTable(result);
                 }, function(err) {
                     alert(err);
                 });
             });
         }
-    )()
+    )();
+
     </script>
     </body>
 </html>

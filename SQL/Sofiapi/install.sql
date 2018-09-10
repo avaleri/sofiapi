@@ -153,8 +153,8 @@ begin
 	 AppName nvarchar(max),
 	 RoutePath nvarchar(2048),
 	 RouteCommand nvarchar(max),
-	 AllowNoParameters bit,				-- specifies if the route can be invoked without any parameters
-	 PublicRoute bit,					-- flag if route is publicly accessible
+	 AllowNoParameters bit,			-- specifies if the route can be invoked without any parameters
+	 PublicRoute bit,			-- flag if route is publicly accessible
 	 PermissionList nvarchar(max) NULL,	-- string of allowed roles
 	 CreateDt datetime,
 	 CreatedBy nvarchar(max),
@@ -195,7 +195,7 @@ INSERT INTO [dbo].[Routes]
            ([AppName]
            ,[RoutePath]
            ,[RouteCommand]
-		   ,[AllowNoParameters]
+           ,[AllowNoParameters]
            ,[PublicRoute]
            ,[PermissionList]
            ,[CreateDt]
@@ -204,7 +204,7 @@ INSERT INTO [dbo].[Routes]
            (@AppName
            ,@RoutePath
            ,@RouteCommand
-		   ,@AllowNoParameters
+	   ,@AllowNoParameters
            ,@PublicRoute
            ,@PermissionList
            ,@CreateDt
@@ -221,7 +221,7 @@ SELECT [RouteID]
       ,[AppName]
       ,[RoutePath]
       ,[RouteCommand]
-	  ,[AllowNoParameters]
+      ,[AllowNoParameters]
       ,[PublicRoute]
       ,[PermissionList]
       ,[CreateDt]
