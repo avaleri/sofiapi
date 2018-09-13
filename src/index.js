@@ -3,10 +3,11 @@ var app = express();
 var Connection = require('tedious').Connection;
 var Request = require('tedious').Request;
 var TYPES = require('tedious').TYPES;
-const result = require('dotenv').config();
- 
-if (result.error) {
-  throw result.error
+const dotenvConfig = require('dotenv').config();
+var bodyParser = require('body-parser');
+
+if (dotenvConfig.error) {
+  throw dotenvConfig.error
 }
 
 // Create connection to database
@@ -67,26 +68,51 @@ var config = {
     });
   };
 
+  var buildParams = function(keys,sourceObj, output) {
+     var result = [];
+     if(keys && keys.length > 0) {
+        for(var i = 0; i < keys.length; i++) {
+            var param = {};
+             for(var j = 0; j < output.parameters.length; j++) {
+                 if(output.parameters[j].PARAMETER_NAME == '@' + keys[i])
+                 {
+                     var newParam = {};
+                     newParam.PARAMETER_NAME = keys[i];
+                     newParam.ROUTINE_NAME = output.parameters[j].ROUTINE_NAME;
+                     newParam.ORDINAL_POSITION = output.parameters[j].ORDINAL_POSITION;
+                     newParam.PARAMETER_MODE = output.parameters[j].PARAMETER_MODE;
+                     newParam.DATA_TYPE = output.parameters[j].DATA_TYPE;
+                     newParam.VALUE = sourceObj[keys[i]];
+                     result.push(newParam);
+                 }
+             }
+        }
+    }
+    return result;
+  }
+
   var getParams = function(req, output) {
+
         var queryParams = req.query;
         var result = [];
+        var keys = [];
+
+        console.log('Getting parameters.');
         if(queryParams) {
-            var keys = Object.keys(queryParams);
-            for(var i = 0; i < keys.length; i++) {
-                var param = {};
-                 for(var j = 0; j < output.parameters.length; j++) {
-                     if(output.parameters[j].PARAMETER_NAME == '@' + keys[i])
-                     {
-                         var newParam = {};
-                         newParam.PARAMETER_NAME = keys[i];
-                         newParam.ROUTINE_NAME = output.parameters[j].ROUTINE_NAME;
-                         newParam.ORDINAL_POSITION = output.parameters[j].ORDINAL_POSITION;
-                         newParam.PARAMETER_MODE = output.parameters[j].PARAMETER_MODE;
-                         newParam.DATA_TYPE = output.parameters[j].DATA_TYPE;
-                         newParam.VALUE = queryParams[keys[i]];
-                         result.push(newParam);
-                     }
-                 }
+            keys = Object.keys(queryParams);
+        }
+
+        if(keys && keys.length > 0) {
+            console.log('Reading from querystring.');
+            result = buildParams(keys,queryParams,output);
+        }
+        else {
+            // 
+            console.log('Reading from body');
+            var bodyObj = req.body;
+            if(bodyObj) {
+                var keys = Object.keys(bodyObj);
+                result = buildParams(keys,bodyObj,output);
             }
         }
         return result;
@@ -208,10 +234,20 @@ var config = {
 
 
 var routeMiddleware = function (req, res, next) {
+    console.log('Route middleware called.');
     getRoute(req, res, next);
 }
 
+
+app.use(express.json());
+app.use(express.urlencoded());
+
   // static file handling
 app.use("/admin", express.static(__dirname + '/admin'));
-app.use(routeMiddleware)
+app.use(routeMiddleware);
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+//app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+//  extended: true
+//})); 
+
 app.listen(3000);
