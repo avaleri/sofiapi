@@ -73,7 +73,7 @@ var config = {
         return result;
     }
 
-    var executeProc = function(procName, params, output, res, next) {
+    var executeProc = function(procName, params, res, next) {
         var request = new Request(procName, function(err, rowCount) {
             if(err) {
                 console.log(err);
@@ -82,8 +82,6 @@ var config = {
 
         var results = [];
         request.on('doneInProc', function(rowCount, more, rows) {
-
-            var output = [];
             for(var i = 0; i < rows.length; i++) {
                 var row = rows[i];
                 var obj = {};
@@ -125,11 +123,12 @@ var config = {
           console.log('Executing proc ' + params[0].ROUTINE_NAME);
           console.log('Parameters:');
           console.log(params);
-          executeProc(params[0].ROUTINE_NAME,params,output,res,next);
+          executeProc(params[0].ROUTINE_NAME,params,res,next);
        }
        else {
            if(output.metadata.AllowNoParameters == 1) {
-            executeProc(output.metadata.RouteCommand, null, res, next);
+            params = null;
+            executeProc(output.metadata.RouteCommand, params,  res, next);
            }
            else {
               next();
