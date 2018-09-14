@@ -10,13 +10,13 @@
                         RouteID
                     </td>
                     <td>
-                        AppName
+                        App Name
                     </td>
                     <td>
-                        RoutePath
+                        Route Path
                     </td>
                     <td>
-                        RouteCommand
+                        Route Command
                     </td>
                     <td>
                         Allow No Parameters
@@ -28,13 +28,13 @@
                         PermissionList
                     </td>
                     <td>
-                        CreateDt
+                        Create Date
                     </td>
                     <td>
-                        CreatedBy
+                        Created By
                     </td>
                     <td>
-                        ModifiedDt
+                        Modified Date
                     </td>
                     <td>
                         Modified By
@@ -85,42 +85,50 @@
                 </template>
                 <template id="rowEdit">
                     <tr>
-                        <td>
-                            <span id="lblRouteID"></span>
-                        </td>
-                        <td>
-                            <input id="txtAppName" type="text" />
-                        </td>
-                        <td>
-                            <input id="txtRoutePath" type="text" />
-                        </td>
-                        <td>
-                            <input id="txtRouteCommand" type="text" />
-                        </td>
-                        <td>
-                            <input id="chkAllowNoParameters" type="checkbox" />
-                        </td>
-                        <td>
-                            <input id="chkPublicRoute" type="checkbox" />
-                        </td>
-                        <td>
-                            <input id="txtPermissionList" type="text" />
-                        </td>
-                        <td>
-                            <span id="lblCreateDt"></span>
-                        </td>
-                        <td>
-                            <span id="lblCreatedBy"></span>
-                        </td>
-                        <td>
-                            <span id="lblModifiedDt"></span>
-                        </td>
-                        <td>
-                            <span id="lblModifiedBy"></span>
-                        </td>
-                        <td>
-                            <input type="button" data-cmd="Update" value="Update" />
-                            <input type="button" data-cmd="Cancel" value="Cancel" />
+                        <td colspan="12">
+                            <form>
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <span id="lblRouteID"></span>
+                                        </td>
+                                        <td>
+                                            <input id="txtAppName" type="text" required="required" pattern="[a-z]*" title="Only lowercase letters" />
+                                        </td>
+                                        <td>
+                                            <input id="txtRoutePath" type="text" required="required" maxlength="2048" pattern="[a-z0-9/]*" title="Only lowercase letters and numbers"/>
+                                        </td>
+                                        <td>
+                                            <input id="txtRouteCommand" type="text" required="required" pattern="[a-zA-Z0-9_]*" title="Only letters, numbers, and _ allowed" />
+                                        </td>
+                                        <td>
+                                            <input id="chkAllowNoParameters" type="checkbox" />
+                                        </td>
+                                        <td>
+                                            <input id="chkPublicRoute" type="checkbox" />
+                                        </td>
+                                        <td>
+                                            <input id="txtPermissionList" type="text" pattern="[a-zA-Z0-9,]*" title="Only letters, numbers, and , allowed" />
+                                        </td>
+                                        <td>
+                                            <span id="lblCreateDt"></span>
+                                        </td>
+                                        <td>
+                                            <span id="lblCreatedBy"></span>
+                                        </td>
+                                        <td>
+                                            <span id="lblModifiedDt"></span>
+                                        </td>
+                                        <td>
+                                            <span id="lblModifiedBy"></span>
+                                        </td>
+                                        <td>
+                                            <input type="submit" data-cmd="Update" value="Update" />
+                                            <input type="button" data-cmd="Cancel" value="Cancel" />
+                                        </td>                                        
+                                    </tr>
+                                </table>
+                            </form>
                         </td>
                     </tr>                        
                 </template>
@@ -131,6 +139,7 @@
             <input type="button" value="Add Route" id="btnAddRoute" />
             <template id="rowAdd">
                 <div>
+                <form id="addForm">           
                 <table>
                     <tr>
                         <td>
@@ -139,7 +148,7 @@
                             </label>
                         </td>
                         <td>
-                            <input id="txtAppName" type="text" />
+                            <input id="txtAppName" type="text" required="required" pattern="[a-z]*" title="Only lowercase letters" />
                         </td>
                     </tr>
                     <tr>
@@ -149,17 +158,17 @@
                             </label>
                         </td>
                         <td>
-                            <input id="txtRoutePath" type="text" />
+                            <input id="txtRoutePath" type="text" required="required" maxlength="2048" pattern="[a-z0-9/]*" title="Only lowercase letters and numbers" />
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label for="txtRouteCommand">
+                            <label for="txtRouteCommand" required="required">
                                     Route Command
                             </label>
                         </td>
                         <td>
-                            <input id="txtRouteCommand" type="text" />
+                            <input id="txtRouteCommand" type="text" required="required" pattern="[a-zA-Z0-9_]*" title="Only letters, numbers, and _ allowed" />
                         </td>
                     </tr>
                     <tr>
@@ -189,15 +198,16 @@
                             </label>
                         </td>
                         <td>
-                            <input id="txtPermissionList" type="text" />
+                            <input id="txtPermissionList" type="text" pattern="[a-zA-Z0-9,]*" title="Only letters, numbers, and , allowed" />
                         </td>
                     </tr>                                                                
                 </table>
                 <div>
-                        <input type="button" data-cmd="Save" value="Save" />
+                        <input type="submit" data-cmd="Save" value="Save" />
                         <input type="button" data-cmd="Cancel" value="Cancel" />                    
                 </div>
                  </div>
+                </form>                 
             </template>
             <div id="addRouteContainer">
                 <div></div>
@@ -209,55 +219,26 @@
     (
         function(){
 
-            function btnSaveRoute_Click(ele) {
-                var appName = row.querySelector('#txtAppName');
-                var routePath = row.querySelector('#txtRoutePath');
-                var routeCommand = row.querySelector('#txtRouteCommand');
-                var allowNoParameters = row.querySelector('#chkAllowNoParameters');
-                var publicRoute = row.querySelector('#chkPublicRoute');
-                var permissionList = row.querySelector('#txtPermissionList');
+            function btnSaveRoute_Click() {
+                var appName = document.querySelector('#txtAppName');
+                var routePath = document.querySelector('#txtRoutePath');
+                var routeCommand = document.querySelector('#txtRouteCommand');
+                var allowNoParameters = document.querySelector('#chkAllowNoParameters');
+                var publicRoute = document.querySelector('#chkPublicRoute');
+                var permissionList = document.querySelector('#txtPermissionList');
                 var updateData = {};
-                
-            }
+                var appName = document.querySelector('#txtAppName');
+                var routePath = document.querySelector('#txtRoutePath');
+                var routeCommand = document.querySelector('#txtRouteCommand');
+                var allowNoParameters = document.querySelector('#chkAllowNoParameters');
+                var publicRoute = document.querySelector('#chkPublicRoute');
+                var permissionList = document.querySelector('#txtPermissionList');
 
-            function btnCancelAdd_Click(ele) {
-                var addRouteContainer = document.getElementById('addRouteContainer');
-                let div = document.createElement('div');
-                addRouteContainer.replaceChild(div,addRouteContainer.children[0]);
-            }
-
-            function btnAdd_Click(ele) {
-                var template = GetTemplate('#rowAdd');
-                var addRouteContainer = document.getElementById('addRouteContainer');
-                var clone = template.content.cloneNode(true);
-                addRouteContainer.replaceChild(clone, addRouteContainer.children[0]);
-
-                var btnSave = document.querySelector('input[data-cmd="Save"]');
-                var btnCancel = document.querySelector('input[data-cmd="Cancel"]');
-                btnCancel.onclick = (function() {btnCancelAdd_Click(btnCancel);});
-                btnSave.onclick = (function() {btnSaveRoute_Click(btnSave);});
-
-            }
-
-            function btnUpdate_Click(ele) {
-                var row = ele.parentNode.parentNode;
-
-                var updateData = {};
-                var routeID = row.querySelector('#lblRouteID');
-                var appName = row.querySelector('#txtAppName');
-                var routePath = row.querySelector('#txtRoutePath');
-                var routeCommand = row.querySelector('#txtRouteCommand');
-                var allowNoParameters = row.querySelector('#chkAllowNoParameters');
-                var publicRoute = row.querySelector('#chkPublicRoute');
-                var permissionList = row.querySelector('#txtPermissionList');
-
-                updateData.RouteID = routeID.textContent;
                 updateData.AppName = appName.value;
                 updateData.RoutePath = routePath.value;
                 updateData.RouteCommand = routeCommand.value;
                 updateData.AllowNoParameters = false;
-                updateData.CreateDt = GetDateDisplayFormat(new Date());
-                updateData.CreatedBy = 'avaleri@gmail.com';
+                updateData.UserName = 'avaleri@gmail.com';
                 if(allowNoParameters.checked) {
                     updateData.AllowNoParameters = true;
                 }
@@ -279,36 +260,60 @@
                 }).then(function(response) {
                     return response.json();
                 }).then(function(data) {
-                    console.log(data);
-                });
-                console.log(updateData);
-
+                    window.location = window.location;
+                });           
             }
 
-            function btnCancel_Click(ele) {
-                var template = GetDisplayTemplate();
+            function btnCancelAdd_Click(ele) {
+                var addRouteContainer = document.getElementById('addRouteContainer');
+                let div = document.createElement('div');
+                addRouteContainer.replaceChild(div,addRouteContainer.children[0]);
+            }
+
+            function btnAdd_Click(ele) {
+                var template = GetTemplate('#rowAdd');
+                var addRouteContainer = document.getElementById('addRouteContainer');
                 var clone = template.content.cloneNode(true);
-                var routeID = ele.parentNode.parentNode.querySelector('#lblRouteID');
-                var routeData = JSON.parse(routeID.getAttribute('data-route'));
-                var clone = BindDisplayTemplate(template, routeData);
-                ele.parentNode.parentNode.replaceWith(clone);//, template.parentNode.children[2]); // swap out template
+                addRouteContainer.replaceChild(clone, addRouteContainer.children[0]);
+
+                var addForm = document.getElementById('addForm');
+                addForm.onsubmit = btnSaveRoute_Click;
+                var btnSave = document.querySelector('input[data-cmd="Save"]');
+                var btnCancel = document.querySelector('input[data-cmd="Cancel"]');
+                btnCancel.onclick = (function() {btnCancelAdd_Click(btnCancel);});
             }
 
-            function btnEdit_Click(ele) {
-                var data = JSON.parse(ele.parentNode.parentNode.children[0].getAttribute('data-route'));
-                var template = GetEditTemplate();
-                var clone = BindEditTemplate(template,data);
-                ele.parentNode.parentNode.replaceWith(clone);//, template.parentNode.children[2]); // swap out template
-            }
-
-            function btnDelete_Click(ele) {
+            function btnUpdate_Click(ele) {
                 var row = ele.parentNode.parentNode;
-                var data = JSON.parse(row.children[0].getAttribute('data-route'));
-                var updateData = {};
-                var routeID = data.RouteID;
-                var updateUrl = '/api/routes/delete';
 
-                updateData.RouteID = routeID;
+                var updateData = {};
+                var routeID = row.querySelector('#lblRouteID');
+                var appName = row.querySelector('#txtAppName');
+                var routePath = row.querySelector('#txtRoutePath');
+                var routeCommand = row.querySelector('#txtRouteCommand');
+                var allowNoParameters = row.querySelector('#chkAllowNoParameters');
+                var publicRoute = row.querySelector('#chkPublicRoute');
+                var permissionList = row.querySelector('#txtPermissionList');
+
+                updateData.RouteID = routeID.textContent;
+                updateData.AppName = appName.value;
+                updateData.RoutePath = routePath.value;
+                updateData.RouteCommand = routeCommand.value;
+                updateData.AllowNoParameters = false;
+                updateData.UserName = 'avaleri@gmail.com';
+                if(allowNoParameters.checked) {
+                    updateData.AllowNoParameters = true;
+                }
+
+                updateData.PublicRoute = false;
+                if(publicRoute.checked) {
+                    updateData.PublicRoute = true;
+                }
+
+                updateData.PermissionList = permissionList.value;
+
+
+                var updateUrl = '/api/routes/update';
                 fetch(updateUrl, {
                     method: 'post',
                     headers: {
@@ -319,8 +324,53 @@
                 }).then(function(response) {
                     return response.json();
                 }).then(function(data) {
-                    console.log(data);
-                });
+                    window.location = window.location;
+                });                   
+            }
+
+            function btnCancel_Click(ele) {
+                var template = GetDisplayTemplate();
+                var clone = template.content.cloneNode(true);
+                var routeID = ele.parentNode.parentNode.querySelector('#lblRouteID');
+                var routeData = JSON.parse(routeID.getAttribute('data-route'));
+                var clone = BindDisplayTemplate(template, routeData);
+                ele.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.replaceWith(clone);
+                // button --> td --> tr --> table --> form --> td --> tr 
+            }
+
+            function btnEdit_Click(ele) {
+                var data = JSON.parse(ele.parentNode.parentNode.children[0].getAttribute('data-route'));
+                var template = GetEditTemplate();
+                var clone = BindEditTemplate(template,data);
+                ele.parentNode.parentNode.replaceWith(clone);
+                // button --> td --> tr
+            }
+
+            function btnDelete_Click(ele) {
+
+                var confirmDelete = confirm('Are you sure you want to delete?');
+                if(confirmDelete) {   
+                    var row = ele.parentNode.parentNode;
+                    var data = JSON.parse(row.children[0].getAttribute('data-route'));
+                    var updateData = {};
+                    var routeID = data.RouteID;
+                    var updateUrl = '/api/routes/delete';
+
+                    updateData.RouteID = routeID;
+                    fetch(updateUrl, {
+                        method: 'post',
+                        headers: {
+                            'Accept': 'application/json, text/plain, */*',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+
+                        window.location = window.location;
+                    });
+               }
             }
 
             function GetTemplate(querySelector) {
@@ -376,8 +426,8 @@
 
                 var btnUpdate = clone.querySelector('input[data-cmd="Update"]');
                 var btnCancel = clone.querySelector('input[data-cmd="Cancel"]');
-
-                btnUpdate.onclick = (function() {btnUpdate_Click(btnUpdate);});
+                var form = clone.querySelector('form');
+                form.onsubmit = (function() {btnUpdate_Click(btnUpdate);});
                 btnCancel.onclick = (function() {btnCancel_Click(btnCancel);});
                 return clone;
             }
@@ -407,7 +457,7 @@
                 cells[cellIndex++].textContent = data.PermissionList;
                 cells[cellIndex++].textContent = GetDateDisplayFormat(data.CreateDt);
                 cells[cellIndex++].textContent = data.CreatedBy;
-                cells[cellIndex++].textContent = data.ModifiedDt;
+                cells[cellIndex++].textContent = GetDateDisplayFormat(data.ModifiedDt);
                 cells[cellIndex++].textContent = data.ModifiedBy;
                 btnEdit.onclick = (function() {btnEdit_Click(btnEdit);});
                 btnDelete.onclick = (function() {btnDelete_Click(btnDelete);});

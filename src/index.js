@@ -23,51 +23,6 @@ var config = {
     }
   }
 
-   
-  var executeStatement = function executeStatement(stmt, res, next) {
-    var connection = new Connection(config);
-    var result = [];
-    var request = new Request(stmt, function(err, rowCount) {
-      if (err) {
-        console.log(err);
-      } else {
-        if(result && result.length > 0) {
-            res.status(200).end(JSON.stringify(result));
-        }
-        else {
-            res.status(200).end(JSON.stringify([]));
-        }        
-      }
-  
-      connection.close();
-    });
-    
-
-    request.on('row', function(columns) {
-     var row = {};
-      columns.forEach(function(column) {
-        if (column.value === null) {
-           row[column.metadata.colName] = null;
-        } else {
-          row[column.metadata.colName] = column.value;
-        }
-      });
-      result.push(row);
-
-    });
-  
-      // Attempt to connect and execute queries if connection goes through
-      connection.on('connect', function(err) {
-        if (err) {
-            console.log(err);
-        } else {
-
-        // In SQL Server 2000 you may need: connection.execSqlBatch(request);
-        connection.execSql(request);
-        }
-    });
-  };
-
   var buildParams = function(keys,sourceObj, output) {
      var result = [];
      if(keys && keys.length > 0) {
@@ -164,14 +119,17 @@ var config = {
         })
     };
 
-    var executeRoute = function(req,output,res,next) {
+    var executeRoute = function(req, output, res, next) {
        var params = getParams(req, output);
        if(params && params.length > 0) {
+          console.log('Executing proc ' + params[0].ROUTINE_NAME);
+          console.log('Parameters:');
+          console.log(params);
           executeProc(params[0].ROUTINE_NAME,params,output,res,next);
        }
        else {
            if(output.metadata.AllowNoParameters == 1) {
-            executeStatement('exec ' + output.metadata.RouteCommand, res, next);
+            executeProc(output.metadata.RouteCommand, null, res, next);
            }
            else {
               next();

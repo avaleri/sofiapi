@@ -149,17 +149,17 @@ if not exists (select * from sysobjects where name = 'Routes')
 begin
 	
 	create table [dbo].[Routes]
-	(RouteID int identity(1,1),
-	 AppName nvarchar(max),
-	 RoutePath nvarchar(2048),
-	 RouteCommand nvarchar(max),
-	 AllowNoParameters bit,			-- specifies if the route can be invoked without any parameters
-	 PublicRoute bit,			-- flag if route is publicly accessible
+	(RouteID int identity(1,1) NOT NULL,
+	 AppName nvarchar(max) NOT NULL,
+	 RoutePath nvarchar(2048) NOT NULL,
+	 RouteCommand nvarchar(max) NOT NULL,
+	 AllowNoParameters bit NOT NULL,			-- specifies if the route can be invoked without any parameters
+	 PublicRoute bit NOT NULL,			-- flag if route is publicly accessible
 	 PermissionList nvarchar(max) NULL,	-- string of allowed roles
-	 CreateDt datetime,
-	 CreatedBy nvarchar(max),
+	 CreateDt datetime NOT NULL,
+	 CreatedBy nvarchar(max) NOT NULL,
 	 ModifiedDt datetime NULL,
-	 ModifiedBy datetime NULL
+	 ModifiedBy nvarchar(max) NULL
 	)
 
 	-- store routing information
@@ -182,11 +182,10 @@ create or alter proc [dbo].[usp_Routes_Ins]
 @AppName nvarchar(max),
 @RoutePath nvarchar(2048),
 @RouteCommand nvarchar(max),
-@AllowNoParameters bit,
+@AllowNoParameters bit = 0,
 @PublicRoute bit,
 @PermissionList nvarchar(max) = NULL,
-@CreateDt datetime,
-@CreatedBy nvarchar(max)
+@UserName nvarchar(max)
 )
 as
 begin
@@ -195,7 +194,7 @@ INSERT INTO [dbo].[Routes]
            ([AppName]
            ,[RoutePath]
            ,[RouteCommand]
-           ,[AllowNoParameters]
+		   ,[AllowNoParameters]
            ,[PublicRoute]
            ,[PermissionList]
            ,[CreateDt]
@@ -204,13 +203,39 @@ INSERT INTO [dbo].[Routes]
            (@AppName
            ,@RoutePath
            ,@RouteCommand
-	   ,@AllowNoParameters
+		   ,@AllowNoParameters
            ,@PublicRoute
            ,@PermissionList
-           ,@CreateDt
-           ,@CreatedBy)
+           ,GETUTCDATE()
+           ,@UserName)
 end
-GO
+go
+
+create or alter proc [dbo].[usp_Routes_Upd]
+(
+@RouteID int,
+@AppName nvarchar(max),
+@RoutePath nvarchar(2048),
+@RouteCommand nvarchar(max),
+@AllowNoParameters bit,
+@PublicRoute bit,
+@PermissionList nvarchar(max) = NULL,
+@UserName nvarchar(max)
+)
+as
+begin
+UPDATE [dbo].[Routes]
+   SET [AppName] = @AppName
+      ,[RoutePath] = @RoutePath
+      ,[RouteCommand] = @RouteCommand
+      ,[AllowNoParameters] = @AllowNoParameters
+      ,[PublicRoute] = @PublicRoute
+      ,[PermissionList] = @PermissionList
+      ,[ModifiedDt] = GETUTCDATE()
+      ,[ModifiedBy] = @UserName
+ WHERE RouteID = @RouteID
+end
+go
 
 create or alter proc [dbo].[usp_Routes_Sel]
 (@RouteID int)
@@ -354,11 +379,9 @@ go
 
 /* begin add system routes */
 	truncate table Routes
-	declare @CreateDt datetime,
-		@CreatedBy nvarchar(max)
+	declare @UserName nvarchar(max)
 
-	set @CreateDt = getdate()
-	set @CreatedBy = 'avaleri@gmail.com'
+	set @UserName = 'SYSTEM'
 
 	exec usp_Routes_Ins
 	@AppName = 'sofiapi',
@@ -367,8 +390,7 @@ go
 	@AllowNoParameters = 0,
 	@PublicRoute = 1,
 	@PermissionList = NULL,
-	@CreateDt = @CreateDt,
-	@CreatedBy = @CreatedBy
+	@UserName = @UserName
 
 	exec usp_Routes_Ins
 	@AppName = 'sofiapi',
@@ -377,8 +399,7 @@ go
 	@AllowNoParameters = 1,
 	@PublicRoute = 1,
 	@PermissionList = NULL,
-	@CreateDt = @CreateDt,
-	@CreatedBy = @CreatedBy
+	@UserName = @UserName
 
 	exec usp_Routes_Ins
 	@AppName = 'sofiapi',
@@ -387,8 +408,16 @@ go
 	@AllowNoParameters = 0,
 	@PublicRoute = 1,
 	@PermissionList = NULL,
-	@CreateDt = @CreateDt,
-	@CreatedBy = @CreatedBy
+	@UserName = @UserName
+
+	exec usp_Routes_Ins
+	@AppName = 'sofiapi',
+	@RoutePath = '/api/routes/update',
+	@RouteCommand = 'usp_Routes_Upd',
+	@AllowNoParameters = 0,
+	@PublicRoute = 1,
+	@PermissionList = NULL,
+	@UserName = @UserName
 
 	exec usp_Routes_Ins
 	@AppName = 'sofiapi',
@@ -397,7 +426,6 @@ go
 	@AllowNoParameters = 0,
 	@PublicRoute = 1,
 	@PermissionList = NULL,
-	@CreateDt = @CreateDt,
-	@CreatedBy = @CreatedBy
+	@UserName = @UserName
 
 /* end add system routes */

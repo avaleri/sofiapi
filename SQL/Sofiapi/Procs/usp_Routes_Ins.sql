@@ -6,11 +6,10 @@ create or alter proc [dbo].[usp_Routes_Ins]
 @AppName nvarchar(max),
 @RoutePath nvarchar(2048),
 @RouteCommand nvarchar(max),
-@RouteType int,
+@AllowNoParameters bit = 0,
 @PublicRoute bit,
 @PermissionList nvarchar(max) = NULL,
-@CreateDt datetime,
-@CreatedBy nvarchar(max)
+@UserName nvarchar(max)
 )
 as
 begin
@@ -19,7 +18,7 @@ INSERT INTO [dbo].[Routes]
            ([AppName]
            ,[RoutePath]
            ,[RouteCommand]
-           ,[RouteType]
+		   ,[AllowNoParameters]
            ,[PublicRoute]
            ,[PermissionList]
            ,[CreateDt]
@@ -28,12 +27,12 @@ INSERT INTO [dbo].[Routes]
            (@AppName
            ,@RoutePath
            ,@RouteCommand
-           ,@RouteType
+		   ,@AllowNoParameters
            ,@PublicRoute
            ,@PermissionList
-           ,@CreateDt
-           ,@CreatedBy)
+           ,GETUTCDATE()
+           ,@UserName)
 end
-GO
+go
 
 
