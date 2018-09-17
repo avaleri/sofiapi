@@ -1,5 +1,15 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <style type="text/css">
+        #paginationContianer > span:hover {
+            background-color: rgb(179, 179, 179);
+        }
+        #paginationContianer {
+            color: blue;
+        }
+        </style>
+    </head>
     <body>
 
     <div id="app">
@@ -209,8 +219,16 @@
                  </div>
                 </form>                 
             </template>
+            <template id="pagingButton">
+                <span style="padding-left: 5px;  padding-right: 5px; display: table-cell; cursor: pointer; border-style: solid; border-color: black; border-width: 1pt;">
+
+                </span>
+            </template>
             <div id="addRouteContainer">
                 <div></div>
+            </div>
+            <div id="paginationContianer" style="margin-top: 10px;">
+
             </div>
         </div>
     </div>
@@ -464,7 +482,62 @@
                 return clone;
             }
 
-            function BindRouteTable(routeJson) {
+            function GetPageNumbers(rowCount, pageSize, currentPage) {
+                
+                if(pageSize > 0) {
+                    var pageRange = 2;
+                    var numPages = Math.ceil(rowCount/pageSize);
+                    if(numPages == 1) {
+                        return [];
+                    }
+
+                    var startPage = currentPage - pageRange;
+                    var endPage = currentPage + pageRange;
+
+                    if(startPage <= 0) {
+                        startPage = 1;
+                    }
+
+                    if(endPage > numPages) {
+                        endPage = numPages;
+                    }
+
+                    var pageButtons = [];
+                    for(var i = startPage; i <= endPage; i++)
+                    {
+                        pageButtons.push(i);
+                    }
+
+                    return pageButtons;
+                }
+            }
+
+            function RenderPagination(pageNumbers, currentPage) {
+                document.getElementById('paginationContianer').innerHTML = ''; // clear pre-existing state
+                for(var i = 0; i < pageNumbers.length; i++) {
+                    RenderPageNumber(pageNumbers[i], currentPage == pageNumbers[i]);
+                }
+            }
+
+            function RenderPageNumber(pageNumber, isCurrentPage)
+            {
+                var template = document.querySelector('#pagingButton');
+                var clone = template.content.cloneNode(true);
+                clone.children[0].textContent = pageNumber.toString();
+                
+                if(isCurrentPage === true) {
+                   clone.children[0].style.setProperty('font-weight','bold');
+                }
+
+                clone.children[0].onclick = function() { 
+                    ClearRoutes();
+                    GetRoutes(pageNumber);
+                };
+                document.getElementById('paginationContianer').appendChild(clone);
+            }
+
+
+            function BindRouteTable(routeJson, currentPage) {
                 if(routeJson && routeJson.length > 0) {
                         var template = GetDisplayTemplate();                           
                         for(let i = 0; i < routeJson.length; i++) {
@@ -472,6 +545,9 @@
                             var clone = BindDisplayTemplate(template,route);
                             template.parentNode.appendChild(clone);
                         }
+
+                        var pageNumbers = GetPageNumbers(routeJson[0].MaxRows, routeJson[0].PageSize, currentPage);
+                        RenderPagination(pageNumbers, currentPage);
                     }
             }
 
@@ -484,15 +560,28 @@
 
             BindEventHandlers();
 
-            var fetchRoutes = '/api/routes/getAll';
-            fetch(fetchRoutes).then(function(response) {
-                    var responseJson = response.json();
-                    responseJson.then(function (result) {
-                        BindRouteTable(result);
-                }, function(err) {
-                    alert(err);
+            function ClearRoutes() {
+                var exisitingRoutes = document.querySelectorAll('tbody > tr');
+                for(var i = 0; i < exisitingRoutes.length; i++) {
+                    exisitingRoutes[i].parentNode.removeChild(exisitingRoutes[i]);
+                }
+
+            }
+
+            function GetRoutes(pageNumber) {
+                var fetchRoutes = '/api/routes/getAll' + '?PageNo=' + pageNumber;
+                fetch(fetchRoutes).then(function(response) {
+                        var responseJson = response.json();
+                        responseJson.then(function (result) {
+                            BindRouteTable(result, pageNumber);
+                    }, function(err) {
+                        alert(err);
+                    });
                 });
-            });
+            }
+
+            GetRoutes(1);
+
         }
     )();
 
