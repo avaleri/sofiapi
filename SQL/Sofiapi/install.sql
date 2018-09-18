@@ -285,7 +285,11 @@ create or alter proc [dbo].[usp_Routes_SelAll]
 		  ,[ModifiedDt]
 		  ,[ModifiedBy]
 	FROM [dbo].[Routes]
-	WHERE (@SearchValue IS NULL OR RoutePath LIKE '%' + @SearchValue + '%') 
+	WHERE (@SearchValue IS NULL OR ( (RoutePath LIKE '%' + @SearchValue + '%') OR 
+								     (AppName LIKE '%' + @SearchValue + '%') OR 
+								     (RouteCommand LIKE '%' + @SearchValue + '%') OR
+									 (PermissionList LIKE '%' + @SearchValue + '%') 
+		  )) 
 	 	    ORDER BY
    	 CASE WHEN (@SortColumn = 'RoutePath' AND @SortOrder='ASC')
                     THEN RoutePath

@@ -2,17 +2,29 @@
 <html>
     <head>
         <style type="text/css">
+        
         #paginationContianer > span:hover {
             background-color: rgb(179, 179, 179);
         }
+
         #paginationContianer {
             color: blue;
+        }
+        
+        #app
+         {
+             margin: 10px;
         }
         </style>
     </head>
     <body>
 
     <div id="app">
+        <h1>API Route Management</h1>
+        <div id="routeFilter">
+            <input type="text" autocomplete="Filter routes" id="txtFilter" />
+            <input type="button" value="Filter" id="btnFilter" />
+        </div>
         <table>
             <thead>
                 <tr>
@@ -346,6 +358,12 @@
                 });                   
             }
 
+            function btnFilter_Click(ele) {
+                var txtFilter = document.getElementById('txtFilter');
+                var filter = txtFilter.value;
+                GetRoutes(1,filter);
+            }
+
             function btnCancel_Click(ele) {
                 var template = GetDisplayTemplate();
                 var clone = template.content.cloneNode(true);
@@ -555,7 +573,10 @@
 
             function BindEventHandlers() {
                 var btnAdd = document.getElementById('btnAddRoute');
+                var btnFilter = document.getElementById('btnFilter');
+
                 btnAdd.onclick = (function() {btnAdd_Click(btnAdd);});
+                btnFilter.onclick = (function() {btnFilter_Click(btnFilter)});
             }
 
             BindEventHandlers();
@@ -568,11 +589,17 @@
 
             }
 
-            function GetRoutes(pageNumber) {
+            function GetRoutes(pageNumber, filter) {
                 var fetchRoutes = '/api/routes/getAll' + '?PageNo=' + pageNumber;
+
+                if(filter && filter.length > 2) {
+                    fetchRoutes +='&SearchValue=' + filter;
+                }
+
                 fetch(fetchRoutes).then(function(response) {
                         var responseJson = response.json();
                         responseJson.then(function (result) {
+                            ClearRoutes();
                             BindRouteTable(result, pageNumber);
                     }, function(err) {
                         alert(err);

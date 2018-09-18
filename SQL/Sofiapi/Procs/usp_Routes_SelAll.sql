@@ -19,6 +19,7 @@ create or alter proc [dbo].[usp_Routes_SelAll]
 		  ,[AppName]
 		  ,[RoutePath]
 		  ,[RouteCommand]
+		  ,[AllowNoParameters]
 		  ,[PublicRoute]
 		  ,[PermissionList]
 		  ,[CreateDt]
@@ -26,7 +27,11 @@ create or alter proc [dbo].[usp_Routes_SelAll]
 		  ,[ModifiedDt]
 		  ,[ModifiedBy]
 	FROM [dbo].[Routes]
-	WHERE (@SearchValue IS NULL OR RoutePath LIKE '%' + @SearchValue + '%') 
+	WHERE (@SearchValue IS NULL OR ( (RoutePath LIKE '%' + @SearchValue + '%') OR 
+								     (AppName LIKE '%' + @SearchValue + '%') OR 
+								     (RouteCommand LIKE '%' + @SearchValue + '%') OR
+									 (PermissionList LIKE '%' + @SearchValue + '%') 
+		  )) 
 	 	    ORDER BY
    	 CASE WHEN (@SortColumn = 'RoutePath' AND @SortOrder='ASC')
                     THEN RoutePath
@@ -49,11 +54,12 @@ CTE_TotalRows AS
 )
 
 select 
-	 MaxRows
+	MaxRows
 	,[RouteID]
 	,[AppName]
 	,[RoutePath]
 	,[RouteCommand]
+	,[AllowNoParameters]
 	,[PublicRoute]
 	,[PermissionList]
 	,[CreateDt]
@@ -65,3 +71,4 @@ select
    WHERE EXISTS (SELECT 1 FROM CTE_Results WHERE CTE_Results.RouteID = t.RouteID)
    OPTION (RECOMPILE)
    END
+GO
