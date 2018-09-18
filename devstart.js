@@ -42,26 +42,67 @@ else {
 }
 
 
+function pingSql(currentTime) {
+  var timeOut = 15000;
+  setTimeout(() => {
+    utils.runCmd('docker',["exec", containerName , "/opt/mssql-tools/bin/sqlcmd",  "-S", "localhost", "-U", "sa", "-P", password, "-Q","select 'hello'"], 
+      function(data) 
+      { 
+        if(data.indexOf('hello') != -1) { 
+          console.log("DB is running.");
+          console.log('Deploying Database...');
+          utils.runCmd('docker',['cp', filename , containerName + ':/tmp/']);
+          utils.runCmd('docker',["exec", containerName , "/opt/mssql-tools/bin/sqlcmd",  "-S", "localhost", "-U", "sa", "-P", password, "-i","/tmp/install.sql"], deployFinished);
+        }
+        else {
+          currentTime+= 1000;
+          if(currentTime > timeOut) {
+            console.log('Timeout exceeded pinging SQL server.');
+          }
+          else {
+            console.log('Pinging SQL (again)');
+            pingSql(currentTime);
+          }
+          
+        }
+      }
+      );
+     }   
+   , 1000);
+}
+
 var passwordParam = 'MSSQL_SA_PASSWORD=' + password;
-utils.runCmd('docker',["pull","microsoft/mssql-server-linux:2017-latest"]);
 
-console.log('Kill running sofisql');
-utils.runCmd('docker',["kill","sofisql"]);
-sleep(1000, function() {
-   console.log('Delete running sofisql');
-   utils.runCmd('docker',["rm","sofisql"]);
-});
+function pullContainer() {
+  utils.runCmd('docker',["pull","microsoft/mssql-server-linux:2017-latest"], killRunningContainer);
+}
 
-sleep(1000, function() {
-   utils.runCmd('docker', ["run", "-e", "ACCEPT_EULA=Y", "-e", passwordParam, "-p:1433:1433", "-d", "--name", containerName, "microsoft/mssql-server-linux:2017-latest"]);
-});
+function killRunningContainer() {
+  console.log('Kill running sofisql');
+  utils.runCmd('docker',["kill","sofisql"], deleteContainer); 
+}
 
-   console.log('Waiting 10 seconds for container to start...');
-   sleep(10000, function() {
-   console.log('Deploying Database...');
-   utils.runCmd('docker',['cp', filename , containerName + ':/tmp/']);
-   utils.runCmd('docker',["exec", containerName , "/opt/mssql-tools/bin/sqlcmd",  "-S", "localhost", "-U", "sa", "-P", password, "-i","/tmp/install.sql"]);
-});
+function deleteContainer() {
+  console.log('Delete running sofisql');
+  utils.runCmd('docker',["rm","sofisql"], createContainer);
+}
+
+function createContainer() {
+  utils.runCmd('docker', ["run", "-e", "ACCEPT_EULA=Y", "-e", passwordParam, "-p:1433:1433", "-d", "--name", containerName, "microsoft/mssql-server-linux:2017-latest"], deployDatabase);
+}
+
+function deployDatabase() {
+  console.log('Waiting for 5 seconds (give services some time to start)...');
+  sleep(5000, function() {
+    console.log('Pinging SQL.');
+  pingSql(0);
+  });
+}
+
+function deployFinished() {
+  console.log('Deployment Finished.');
+}
+pullContainer();
 
 }
 
