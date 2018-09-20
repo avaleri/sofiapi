@@ -30,7 +30,7 @@ const options = {
   maximumLength    : 20
 }
 
-let containerName = "sofisql";
+let containerName = process.env.DB_CONTAINER_NAME;
 let password = '';
 if(process.env.DB_PASS) {
   console.log('Developer password is configured.');
@@ -78,13 +78,13 @@ function pullContainer() {
 }
 
 function killRunningContainer() {
-  console.log('Kill running sofisql');
-  utils.runCmd('docker',["kill","sofisql"], deleteContainer); 
+  console.log('Kill running ' + containerName);
+  utils.runCmd('docker',["kill",containerName], deleteContainer); 
 }
 
 function deleteContainer() {
-  console.log('Delete running sofisql');
-  utils.runCmd('docker',["rm","sofisql"], createContainer);
+  console.log('Delete running ' + containerName);
+  utils.runCmd('docker',["rm",containerName], createContainer);
 }
 
 function createContainer() {

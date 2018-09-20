@@ -145,6 +145,29 @@ GO
 use Sofiapi
 go
 
+if not exists (select * from sysobjects where name = 'Logs')
+begin
+
+create table [dbo].[Logs]
+(LogID int identity(1,1) NOT NULL,
+ Application nvarchar(50) NOT NULL,
+ TimeUtc datetime NOT NULL,
+ Host nvarchar(63) NOT NULL,
+ LogType nvarchar(20) NOT NULL,
+ Source nvarchar(2048) NOT NULL,
+ Message nvarchar(max) NOT NULL,
+ UserName nvarchar(max) NOT NULL,
+ StatusCode int NOT NULL,
+ Headers nvarchar(max) NOT NULL,
+ Cookies nvarchar(max) NOT NULL,
+ QueryString nvarchar(max) NOT NULL,
+ Body nvarchar(max) NOT NULL,
+ Context nvarchar(max) NOT NULL
+)
+
+end
+go
+
 if not exists (select * from sysobjects where name = 'Routes')
 begin
 	
@@ -154,8 +177,8 @@ begin
 	 RoutePath nvarchar(2048) NOT NULL,
 	 RouteCommand nvarchar(max) NOT NULL,
 	 AllowNoParameters bit NOT NULL,			-- specifies if the route can be invoked without any parameters
-	 PublicRoute bit NOT NULL,			-- flag if route is publicly accessible
-	 PermissionList nvarchar(max) NULL,	-- string of allowed roles
+	 PublicRoute bit NOT NULL,					-- flag if route is publicly accessible
+	 PermissionList nvarchar(max) NULL,			-- string of allowed roles
 	 CreateDt datetime NOT NULL,
 	 CreatedBy nvarchar(max) NOT NULL,
 	 ModifiedDt datetime NULL,
@@ -381,6 +404,130 @@ begin
 	end
 end
 go
+
+create or alter proc [dbo].[usp_Logs_SelAll]
+(
+@SearchValue nvarchar(2048) = NULL,
+@PageNo INT = 1,
+@PageSize INT = 5,
+@SortColumn NVARCHAR(20) = 'LogID',
+@SortOrder NVARCHAR(20) = 'Desc'
+)
+ AS BEGIN
+ SET NOCOUNT ON;
+	
+ ; WITH CTE_Results AS 
+(
+
+	SELECT  LogID,
+		    [Application],
+			[TimeUtc],
+			Host,
+			LogType,
+			[Source],
+			[Message],
+			UserName,
+			StatusCode,
+			Headers,
+			Cookies,
+			QueryString,
+			Body,
+			Context
+	FROM [dbo].[Logs]
+	WHERE (@SearchValue IS NULL OR ( (Application LIKE '%' + @SearchValue + '%') OR 
+								     (Host LIKE '%' + @SearchValue + '%') OR 
+								     (Message LIKE '%' + @SearchValue + '%') OR
+									 (Context LIKE '%' + @SearchValue + '%') 
+		  )) 
+	 	    ORDER BY
+   	 CASE WHEN (@SortColumn = 'LogID' AND @SortOrder='ASC')
+                    THEN LogID
+        END ASC,
+        CASE WHEN (@SortColumn = 'LogID' AND @SortOrder='DESC')
+                   THEN LogID
+		END DESC
+      OFFSET @PageSize * (@PageNo - 1) ROWS
+      FETCH NEXT @PageSize ROWS ONLY
+	),
+CTE_TotalRows AS 
+(
+ select count(RouteID) as MaxRows from [Routes] WHERE (@SearchValue IS NULL OR RoutePath LIKE '%' + @SearchValue + '%')
+)
+
+select 
+	MaxRows
+	,LogID
+	[Application],
+	[TimeUtc],
+	Host,
+	LogType,
+	[Source],
+	[Message],
+	UserName,
+	StatusCode,
+	Headers,
+	Cookies,
+	QueryString,
+	Body,
+	Context
+	,@PageSize 'PageSize'
+   from dbo.Logs as t, CTE_TotalRows 
+   WHERE EXISTS (SELECT 1 FROM CTE_Results WHERE CTE_Results.LogID = t.LogID)
+   OPTION (RECOMPILE)
+   END
+go
+
+create or alter proc [dbo].[usp_Logs_Ins]
+(@Application nvarchar(50),
+ @TimeUtc datetime,
+ @Host nvarchar(63),
+ @LogType nvarchar(20),
+ @Source nvarchar(2048),
+ @Message nvarchar(max),
+ @UserName nvarchar(max),
+ @StatusCode int,
+ @Headers nvarchar(max),
+ @Cookies nvarchar(max),
+ @QueryString nvarchar(max),
+ @Body nvarchar(max),
+ @Context nvarchar(max)
+)
+as
+begin
+
+insert into Logs
+([Application],
+ TimeUtc,
+ Host,
+ LogType,
+ [Source],
+ [Message],
+ UserName,
+ StatusCode,
+ Headers,
+ Cookies,
+ QueryString,
+ Body,
+ Context)
+ values
+(@Application,
+ @TimeUtc,
+ @Host,
+ @LogType,
+ @Source,
+ @Message,
+ @UserName,
+ @StatusCode,
+ @Headers,
+ @Cookies,
+ @QueryString,
+ @Body,
+ @Context)
+
+ end
+ 
+go
+
 
 /* begin add system routes */
 	truncate table Routes
