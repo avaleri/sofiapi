@@ -1,21 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <style type="text/css">
-        
-        #paginationContianer > span:hover {
-            background-color: rgb(179, 179, 179);
-        }
-
-        #paginationContianer {
-            color: blue;
-        }
-        
-        #app
-         {
-             margin: 10px;
-        }
-        </style>
+        <link rel="stylesheet" type="text/css" href="styles.css">
     </head>
     <body>
 
@@ -590,7 +576,7 @@
             }
 
             function GetRoutes(pageNumber, filter) {
-                var fetchRoutes = '/api/routes/getAll' + '?PageNo=' + pageNumber;
+                var fetchRoutes = '/api/routes/getall' + '?PageNo=' + pageNumber;
 
                 if(filter && filter.length > 2) {
                     fetchRoutes +='&SearchValue=' + filter;

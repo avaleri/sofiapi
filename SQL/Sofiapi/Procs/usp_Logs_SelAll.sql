@@ -47,12 +47,16 @@ create or alter proc [dbo].[usp_Logs_SelAll]
 	),
 CTE_TotalRows AS 
 (
- select count(RouteID) as MaxRows from [Routes] WHERE (@SearchValue IS NULL OR RoutePath LIKE '%' + @SearchValue + '%')
+ select count(LogID) as MaxRows from [Logs] WHERE (@SearchValue IS NULL OR ( (Application LIKE '%' + @SearchValue + '%') OR 
+								     (Host LIKE '%' + @SearchValue + '%') OR 
+								     (Message LIKE '%' + @SearchValue + '%') OR
+									 (Context LIKE '%' + @SearchValue + '%' ) ) )
+		  
 )
 
 select 
-	MaxRows
-	,LogID
+	MaxRows,
+	LogID,
 	[Application],
 	[TimeUtc],
 	Host,

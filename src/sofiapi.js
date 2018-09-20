@@ -213,13 +213,12 @@ function logError(err, req) {
         errObj.Cookies = req.cookies ? JSON.stringify(req.cookies) : '';
         errObj.QueryString = req.query ? JSON.stringify(req.query) : '';
         errObj.Body = JSON.stringify(req.body)
-        errObj.Context = JSON.stringify(req.AppContext)
+        errObj.Context = req.AppContext ? JSON.stringify(req.AppContext) : '';
         var errParams = buildParamsFromObj(errObj);
-        console.log(errParams);
         executeProc('usp_Logs_Ins',errParams, null, null);
     }
     catch(e) {
-        console.log('An error occured in the error handler.');
+        console.log('An error occured while trying to log the error.');
         console.log(e);    
     }
 

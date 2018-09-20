@@ -546,7 +546,7 @@ go
 
 	exec usp_Routes_Ins
 	@AppName = 'sofiapi',
-	@RoutePath = '/api/routes/getAll',
+	@RoutePath = '/api/routes/getall',
 	@RouteCommand = 'usp_Routes_SelAll',
 	@AllowNoParameters = 1,
 	@PublicRoute = 1,
@@ -580,4 +580,12 @@ go
 	@PermissionList = NULL,
 	@UserName = @UserName
 
+	exec usp_Routes_Ins
+	@AppName = 'sofiapi',
+	@RoutePath = '/api/routes/logs/getall',
+	@RouteCommand = 'usp_Logs_SelAll',
+	@AllowNoParameters = 1,
+	@PublicRoute = 0,
+	@PermissionList = NULL,
+	@UserName = @UserName
 /* end add system routes */
