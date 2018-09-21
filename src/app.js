@@ -1,40 +1,11 @@
 var express = require('express');
 var app = express();
-const dotenvConfig = require('dotenv').config();
 var bodyParser = require('body-parser');
 var sofiapi = require('./sofiapi.js');
 
-if (dotenvConfig.error) {
-  throw dotenvConfig.error
-}
+function StartApp(config) { 
 
-/*
-Parameters to configure in .env file:
-DB_HOST=
-DB_USER=
-DB_PASS=
-DB_NAME=
-APP_NAME=
-DB_CONTAINER_NAME=
-APP_PORT=
-*/
-
-// Create connection to database
-var config = {
-    userName: process.env.DB_USER, 
-    password: process.env.DB_PASS, 
-    server: process.env.DB_HOST,
-    appName: process.env.APP_NAME,
-    appPort: process.env.APP_PORT,
-    options: {
-        database: process.env.DB_NAME,
-        encrypt: true,
-        rowCollectionOnDone: true,
-        rowCollectionOnRequestCompletion: true
-    }
-  }
 sofiapi.configure(config);
-
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
@@ -57,3 +28,9 @@ app.use(function(err, req, res, next) {
 });
 
 app.listen(config.appPort);
+
+}
+
+module.exports = {
+    StartApp: StartApp
+}
