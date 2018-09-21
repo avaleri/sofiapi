@@ -16,6 +16,7 @@ DB_PASS=
 DB_NAME=
 APP_NAME=
 DB_CONTAINER_NAME=
+APP_PORT=
 */
 
 // Create connection to database
@@ -23,7 +24,8 @@ var config = {
     userName: process.env.DB_USER, 
     password: process.env.DB_PASS, 
     server: process.env.DB_HOST,
-    appname: process.env.APP_NAME,
+    appName: process.env.APP_NAME,
+    appPort: process.env.APP_PORT,
     options: {
         database: process.env.DB_NAME,
         encrypt: true,
@@ -54,4 +56,4 @@ app.use(function(err, req, res, next) {
     res.send('An error occured while processing your request.');
 });
 
-app.listen(3000);
+app.listen(config.appPort);

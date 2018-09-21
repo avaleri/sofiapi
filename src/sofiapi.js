@@ -201,7 +201,7 @@ if (err) {
 function logError(err, req) {
     try {
         var errObj = {};
-        errObj.Application = config.appname;
+        errObj.Application = config.appName;
         errObj.TimeUtc = new Date().toISOString().slice(0, 19).replace('T', ' ');;
         errObj.Host = os.hostname();
         errObj.LogType = 'Exception';
