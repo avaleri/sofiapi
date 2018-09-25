@@ -1,6 +1,6 @@
 var os = require('os');
-var Connection = require('tedious').Connection;
-var Request = require('tedious').Request;
+var Connection = null;
+var Request = null
 var TYPES = require('tedious').TYPES;
 var config = {};
 
@@ -13,10 +13,10 @@ function buildParams(keys, sourceObj, output) {
                 if(output.parameters[j].PARAMETER_NAME == '@' + keys[i])
                 {
                     var newParam = {};
-                    newParam.PARAMETER_NAME = keys[i];
                     newParam.ROUTINE_NAME = output.parameters[j].ROUTINE_NAME;
                     newParam.ORDINAL_POSITION = output.parameters[j].ORDINAL_POSITION;
                     newParam.PARAMETER_MODE = output.parameters[j].PARAMETER_MODE;
+                    newParam.PARAMETER_NAME = keys[i];
                     newParam.DATA_TYPE = output.parameters[j].DATA_TYPE;
                     newParam.VALUE = sourceObj[keys[i]];
                     result.push(newParam);
@@ -45,11 +45,9 @@ function buildParamsFromObj(obj) {
 }
 
 function getParams(req, output) {
-
     var queryParams = req.query;
     var result = [];
     var keys = [];
-
     console.log('Getting parameters.');
     if(queryParams) {
         keys = Object.keys(queryParams);
@@ -60,21 +58,19 @@ function getParams(req, output) {
         result = buildParams(keys,queryParams,output);
     }
     else {
-        // 
         console.log('Reading from body');
         var bodyObj = req.body;
         if(bodyObj) {
             var keys = Object.keys(bodyObj);
-            result = buildParams(keys,bodyObj,output);
+            result = buildParams(keys, bodyObj, output);
         }
     }
     return result;
 }
 
-
-
 function executeProc(procName, params, res, next) {
     var request = new Request(procName, function(err, rowCount) {
+        console.log('done callback called.');
         if(err) {
             console.log(err);
             if(next) {
@@ -127,8 +123,12 @@ function executeProc(procName, params, res, next) {
 };
 
 function executeRoute(req, output, res, next) {
+   // console.log(JSON.stringify(output)); 
+   // used to store results for testing purposes
+
    var params = getParams(req, output);
    if(params && params.length > 0) {
+       console.log(params);
       var contextInfo = {};
       contextInfo.ProcName = params[0].ROUTINE_NAME;
       contextInfo.Paraneters = JSON.stringify(params);
@@ -230,8 +230,10 @@ function routeMiddleware(req, res, next) {
 }
 
 
-function configure(_config) {
+function configure(_config, _Connection, _Request) {
     config = _config;
+    Connection = _Connection;
+    Request = _Request;
 }
 
 module.exports = {

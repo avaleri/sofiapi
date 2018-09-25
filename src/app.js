@@ -2,10 +2,12 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var sofiapi = require('./sofiapi.js');
+var Connecton = require('tedious').Connection;
+var Request = require('tedious').Request;
 
 function StartApp(config) { 
 
-sofiapi.configure(config);
+sofiapi.configure(config, Connecton, Request);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 

@@ -21,5 +21,8 @@
     "password-generator": "^2.2.0",
     "strict-password-generator": "^1.1.1",
     "tedious": "^2.6.1"
+  },
+  "devDependencies": {
+    "nyc": "^13.0.1"
   }
 }
