@@ -4,7 +4,7 @@
   "description": "Start fresh development docker image.",
   "main": "devstart.js",
   "scripts": {
-    "test": "test"
+    "test": "mocha"
   },
   "keywords": [
     "api",

@@ -4,19 +4,15 @@ this.config = config;
 this.on = function(event, callback) {
 
     if(event == 'connect') {
-        console.log('connect event called.');
+        //console.log('connect event called.');
         callback();
     }
 };
 
 
 this.callProcedure = function(request) {
-    console.log('callProcedure was called.');
-
-
+    //console.log('callProcedure was called.');
     request.finish();
 }
-
 }
-
 module.exports = Connection;

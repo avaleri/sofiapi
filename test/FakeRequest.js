@@ -25,7 +25,7 @@ function getProcTestRows(procName) {
 Request.prototype.finish = function() {
 
     if(callbacks && callbacks['doneInProc']) {
-       console.log('calling doneInProc');
+       //console.log('calling doneInProc');
        callbacks['doneInProc']();
     }
 
@@ -47,7 +47,7 @@ function Request(procName, callback) {
     this.on = function(event, _callback) {
     
         if(event == 'connect') {
-            console.log('connect event called.');
+            //console.log('connect event called.');
             if(callback) {
                 callbacks[event] = _callback;
             }
@@ -55,21 +55,22 @@ function Request(procName, callback) {
         }
 
         if(event == 'doneInProc') {
-            console.log('doneInProc call scheduled.');
+            //console.log('doneInProc call scheduled.');
             if(_callback) {
                 callbacks[event] = (function() { 
                     var rows = getProcTestRows(_procName);
                     var more = false;
-                    console.log('doneInProc fired.'); _callback(rows.length,more, rows)
+                    //console.log('doneInProc fired.'); 
+                    _callback(rows.length,more, rows)
                 });
             }
         }
 
         if(event == 'doneProc') {
-            console.log('doneProc call scheduled.');
+            //console.log('doneProc call scheduled.');
             if(_callback) {
                 callbacks[event] = (function() { 
-                    console.log('doneProc fired.'); 
+                   // console.log('doneProc fired.'); 
                     _callback()
                 });
             }

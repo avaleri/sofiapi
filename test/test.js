@@ -1,10 +1,13 @@
 var assert = require('assert');
 var sofiapi = require('../src/sofiapi.js');
-
 var Connection = require('./FakeConnection.js');
 var Request = require('./FakeRequest.js');
+var consoleLogger = {};
+consoleLogger.log = function(level, msg) {
+    //console.log(level + ': ' + msg);
+};
 
-sofiapi.configure({}, Connection, Request);
+sofiapi.configure({}, Connection, Request, consoleLogger);
 
 describe('Sofiapi Utilitiy Methods', function() {
 
@@ -210,8 +213,6 @@ describe('Sofiapi Utilitiy Methods', function() {
                 };
 
                 sofiapi.routeMiddleware(req, res, next);
-            
-            
         });
     });
 

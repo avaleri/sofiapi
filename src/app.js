@@ -4,10 +4,22 @@ var bodyParser = require('body-parser');
 var sofiapi = require('./sofiapi.js');
 var Connecton = require('tedious').Connection;
 var Request = require('tedious').Request;
+var winston = require('winston');
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+      // - Write to all logs with level `info` and below to `combined.log` 
+      // - Write all logs error (and below) to `error.log`.
+      new winston.transports.File({ filename: 'error.log', level: 'error' }),
+      new winston.transports.File({ filename: 'combined.log' })
+    ]
+  });
 
 function StartApp(config) { 
 
-sofiapi.configure(config, Connecton, Request);
+sofiapi.configure(config, Connecton, Request, logger);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 

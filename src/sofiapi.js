@@ -3,6 +3,8 @@ var Connection = null;
 var Request = null
 var TYPES = require('tedious').TYPES;
 var config = {};
+var logger = {};
+logger.log = function(level,msg) {}; // default to no-op.
 
 function buildParams(keys, sourceObj, output) {
     var result = [];
@@ -48,17 +50,17 @@ function getParams(req, output) {
     var queryParams = req.query;
     var result = [];
     var keys = [];
-    console.log('Getting parameters.');
+    logger.log('debug','Getting parameters.');
     if(queryParams) {
         keys = Object.keys(queryParams);
     }
 
     if(keys && keys.length > 0) {
-        console.log('Reading from querystring.');
+        logger.log('debug','Reading from querystring.');
         result = buildParams(keys,queryParams,output);
     }
     else {
-        console.log('Reading from body');
+        logger.log('debug','Reading from body');
         var bodyObj = req.body;
         if(bodyObj) {
             var keys = Object.keys(bodyObj);
@@ -70,9 +72,9 @@ function getParams(req, output) {
 
 function executeProc(procName, params, res, next) {
     var request = new Request(procName, function(err, rowCount) {
-        console.log('done callback called.');
+        logger.log('debug','done callback called.');
         if(err) {
-            console.log(err);
+            logger.log('error',err);
             if(next) {
                 next(new Error(err));
             }
@@ -99,7 +101,7 @@ function executeProc(procName, params, res, next) {
 
 
     request.on('doneProc', function(rowCount, more, rows) {
-        console.log('Finished executing proc: ' + procName);   
+        logger.log('info','Finished executing proc: ' + procName);   
     });
 
     if(params && params.length > 0) {
@@ -128,7 +130,7 @@ function executeRoute(req, output, res, next) {
 
    var params = getParams(req, output);
    if(params && params.length > 0) {
-       console.log(params);
+      logger.log('debug',params);
       var contextInfo = {};
       contextInfo.ProcName = params[0].ROUTINE_NAME;
       contextInfo.Paraneters = JSON.stringify(params);
@@ -150,9 +152,8 @@ function getRoute(req, res, next) {
 var RoutePath = req.path;
 var request = new Request('usp_Routes_SelByPath', function(err, rowCount) {
         if(err) {
-            console.log(err);
+            logger.log('error',err);
         }
-        // log error
     });
 
     request.addParameter('RoutePath', TYPES.NVarChar, RoutePath); 
@@ -190,7 +191,7 @@ var connection = new Connection(config);
 // Attempt to connect and execute queries if connection goes through
 connection.on('connect', function(err) {
 if (err) {
-    console.log(err);
+    logger.log('error',err);
 } else {
     connection.callProcedure(request);       
 }
@@ -218,22 +219,23 @@ function logError(err, req) {
         executeProc('usp_Logs_Ins',errParams, null, null);
     }
     catch(e) {
-        console.log('An error occured while trying to log the error.');
-        console.log(e);    
+        logger.log('error','An error occured while trying to log the error.');
+        logger.log('error',e);    
     }
 
 }
 
 function routeMiddleware(req, res, next) {
-    console.log('Route middleware called.');
+    logger.log('info','Route middleware called.');
     getRoute(req, res, next);
 }
 
 
-function configure(_config, _Connection, _Request) {
+function configure(_config, _Connection, _Request, _logger) {
     config = _config;
     Connection = _Connection;
     Request = _Request;
+    logger = _logger;
 }
 
 module.exports = {
