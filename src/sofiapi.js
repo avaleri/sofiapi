@@ -113,7 +113,7 @@ function executeProc(procName, params, res, next) {
     var connection = new Connection(config);
     connection.on('connect', function(err) {
         if(err) {
-            console.log(err);
+            logger.log('Error',err);
             if(next) {
                 next();
             }
@@ -125,8 +125,8 @@ function executeProc(procName, params, res, next) {
 };
 
 function executeRoute(req, output, res, next) {
-   // console.log(JSON.stringify(output)); 
-   // used to store results for testing purposes
+    // console.log(JSON.stringify(output)); 
+    // used to store results for testing purposes
 
    var params = getParams(req, output);
    if(params && params.length > 0) {
@@ -159,6 +159,9 @@ var request = new Request('usp_Routes_SelByPath', function(err, rowCount) {
     request.addParameter('RoutePath', TYPES.NVarChar, RoutePath); 
 
     var results = [];
+
+    // doneInProc gets called multiple times (one per result set in the called procedure)
+    // aggregate each result set into an array in results.
     request.on('doneInProc', function (rowCount, more, rows) { 
         var output = [];
         for(var i = 0; i < rows.length; i++) {
