@@ -46,6 +46,29 @@ function buildParamsFromObj(obj) {
     return params;
 }
 
+function handleError(err, next) {
+
+    if(err) {
+        logger.log('Error',err);
+        if(next) {
+            next(new Error(err));
+        }
+    }
+}
+
+function callProc(request, next) {
+    var connection = new Connection(config);
+    // Attempt to connect and execute queries if connection goes through
+    connection.on('connect', function(err) {
+        if(err) {
+            handleError(err, next);
+        }
+        else {
+            connection.callProcedure(request);
+        }
+    });
+}
+
 function getParams(req, output) {
     var queryParams = req.query;
     var result = [];
@@ -74,11 +97,7 @@ function executeProc(procName, params, res, next) {
     var request = new Request(procName, function(err, rowCount) {
         logger.log('debug','done callback called.');
         if(err) {
-            logger.log('error',err);
-            if(next) {
-                next(new Error(err));
-            }
-            
+            handleError(err, next);
         } else {
             if(res) {
                 res.status(200).end(JSON.stringify(results));
@@ -110,18 +129,7 @@ function executeProc(procName, params, res, next) {
         }
     }
 
-    var connection = new Connection(config);
-    connection.on('connect', function(err) {
-        if(err) {
-            logger.log('Error',err);
-            if(next) {
-                next();
-            }
-        }
-        else {
-            connection.callProcedure(request);
-        }
-    })
+    callProc(request, next);
 };
 
 function executeRoute(req, output, res, next) {
@@ -135,12 +143,12 @@ function executeRoute(req, output, res, next) {
       contextInfo.ProcName = params[0].ROUTINE_NAME;
       contextInfo.Paraneters = JSON.stringify(params);
       req.AppContext = contextInfo;   
-      executeProc(params[0].ROUTINE_NAME,params,res,next);
+      executeProc(params[0].ROUTINE_NAME, params, res, next);
    }
    else {
        if(output.metadata.AllowNoParameters == 1) {
         params = null;
-        executeProc(output.metadata.RouteCommand, params,  res, next);
+        executeProc(output.metadata.RouteCommand, params, res, next);
        }
        else {
           next();
@@ -149,12 +157,12 @@ function executeRoute(req, output, res, next) {
 };
 
 function getRoute(req, res, next) {
-var RoutePath = req.path;
-var request = new Request('usp_Routes_SelByPath', function(err, rowCount) {
-        if(err) {
-            logger.log('error',err);
-        }
-    });
+    var RoutePath = req.path;
+    var request = new Request('usp_Routes_SelByPath', function(err, rowCount) {
+            if(err) {
+                handleError(err, next);
+            }
+        });
 
     request.addParameter('RoutePath', TYPES.NVarChar, RoutePath); 
 
@@ -190,19 +198,11 @@ var request = new Request('usp_Routes_SelByPath', function(err, rowCount) {
         }
     });
 
-var connection = new Connection(config);
-// Attempt to connect and execute queries if connection goes through
-connection.on('connect', function(err) {
-if (err) {
-    logger.log('error',err);
-} else {
-    connection.callProcedure(request);       
-}
-});
-
+    callProc(request, next);
 }
 
 function logError(err, req) {
+    var result = false;
     try {
         var errObj = {};
         errObj.Application = config.appName;
@@ -220,12 +220,14 @@ function logError(err, req) {
         errObj.Context = req.AppContext ? JSON.stringify(req.AppContext) : '';
         var errParams = buildParamsFromObj(errObj);
         executeProc('usp_Logs_Ins',errParams, null, null);
+        result = true; // indicate logging statement reached.
     }
     catch(e) {
         logger.log('error','An error occured while trying to log the error.');
         logger.log('error',e);    
     }
 
+    return result;
 }
 
 function routeMiddleware(req, res, next) {

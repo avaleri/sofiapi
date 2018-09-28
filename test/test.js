@@ -71,7 +71,31 @@ describe('Sofiapi Utilitiy Methods', function() {
         });
     });
 
+    describe('logError', function() {
 
+        it('should call log procedure with valid error and request', function() {
+            var req = {};
+            req.path = '/api/testpath';
+
+            var err = {};
+            err.status = 500;
+            err.Message = 'An error occured while processing your request.';
+
+            var result = sofiapi.logError(err,req);
+            assert.equal(result,true);
+        });
+
+        it('should indicate logging faild with invalid request.', function() {
+            var req = null;
+
+            var err = {};
+            err.status = 500;
+            err.Message = 'An error occured while processing your request.';
+
+            var result = sofiapi.logError(err,req);
+            assert.equal(result, false);
+        });
+    });
     describe('getParams', function() {
 
         it('should properly populate parameters from querystring', function() {
@@ -231,7 +255,7 @@ describe('Sofiapi Utilitiy Methods', function() {
             req.query = { PageNo: '1' };
             
 
-            var res = {};
+            var res = { writable: true};
 
             res.status = function status(code) {
                 assert.equal(code,200);
@@ -327,6 +351,43 @@ describe('Sofiapi Utilitiy Methods', function() {
             sofiapi.routeMiddleware(req, res, next);
         });
 
+        it('should call handleError when request fails for selecting path.', function() {
+            var nextCount = 0;
+            var statusCount = 0;
+            var endCount = 0;
+            function next(err) {
+                if(err) {
+                    console.log('Err: ' + err);
+                }
+                
+                nextCount++;
+
+                assert.equal(nextCount,1);
+                assert.equal(statusCount,0);
+                assert.equal(endCount,0);
+            }
+
+            var req = {};
+            req.path = '/api/bad-path';
+
+            var res = {};
+
+            res.status = function status(code) {
+                statusCount++;
+                assert.equal(code,200);
+                return res;
+                
+            };
+
+            res.end = function end(result) {
+                var _routeData = JSON.parse(result);
+                var pathObj = _routeData[0];
+                assert.equal(pathObj.RoutePath,req.path);
+                endCount++;
+            };
+            sofiapi.configure({}, Connection, Request, consoleLogger);
+            sofiapi.routeMiddleware(req, res, next);
+        });
     });
 
 
