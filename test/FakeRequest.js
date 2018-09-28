@@ -1,9 +1,8 @@
 
 var callbacks = [];
 var doneCallback = function() {};
-var _ranDoneCallback = false;
 var procParams = [];
-var error = {};
+var error = null;
 
 function getProcTestRows(procName) {
 
@@ -18,6 +17,7 @@ function getProcTestRows(procName) {
            rows.push(secondRowSet);
         }
         else if(path == '/api/bad-path') {
+            error = {};
             error.error = 16;
             error.state = 1;
             error.class = 20;
@@ -45,19 +45,16 @@ Request.prototype.finish = function() {
        callbacks['doneInProc']();
     }
 
-    if(callbacks && callbacks['doneProc']) {
-        callbacks['doneProc']();
+    if(error) {
+        doneCallback(error,0);
     }
-    
-    if(_ranDoneCallback === false) {
-        _ranDoneCallback = true;
-        if(error) {
-            doneCallback(error,0);
-        }
-        else {
-            doneCallback();
+    else {
+
+        if(callbacks && callbacks['doneProc']) {
+            callbacks['doneProc']();
         }
         
+        doneCallback();
     }
     
 }
