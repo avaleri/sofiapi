@@ -5,7 +5,7 @@ var BadConnection = require('./FakeBadConnection.js');
 var Request = require('./FakeRequest.js');
 var consoleLogger = {};
 consoleLogger.log = function(level, msg) {
-    //console.log(level + ': ' + JSON.stringify(msg));
+//    console.log(level + ': ' + JSON.stringify(msg));
 };
 
 sofiapi.configure({}, Connection, Request, consoleLogger);
@@ -210,18 +210,54 @@ describe('Sofiapi Utilitiy Methods', function() {
 
     describe('routeMiddleware', function() {
 
-        it('should route a valid request with no parameters', function() {
+            it('should route a valid request with no parameters', function() {
 
+                    function next(err) {
+                        if(err) {
+                            console.log('Err: ' + err);
+                        }
+                        console.log('next called.');
+                    }
+
+                    var req = {};
+                    
+                    req.path = '/api/routes/getall';
+                    req.query = {};
+                    var res = {};
+
+                    res.status = function status(code) {
+                        assert.equal(code,200);
+                        return res;
+                    };
+
+                    res.end = function end(result) {
+                        var _routeData = JSON.parse(result);
+                        var pathObj = _routeData[0];
+                        assert.equal(pathObj.RoutePath,req.path);
+                        // should return the matching route
+                    };
+
+                    sofiapi.routeMiddleware(req, res, next);
+            });
+
+            it('should route a valid request with no parameters only if that is allowed by the procedure', function() {
+                var nextCount = 0;
+                var statusCount = 0;
+                var endCount = 0;
                 function next(err) {
                     if(err) {
-                        console.log('Err: ' + err);
+                        console.log('Err...: ' + err);
                     }
-                    console.log('next called.');
+                    nextCount++;
+
+                    assert.equal(nextCount,1);
+                    assert.equal(statusCount,0);
+                    assert.equal(endCount,0);
                 }
 
                 var req = {};
                 
-                req.path = '/api/routes/getall';
+                req.path = '/api/routes/getallrequireparameters';
                 req.query = {};
                 var res = {};
 
@@ -239,6 +275,7 @@ describe('Sofiapi Utilitiy Methods', function() {
 
                 sofiapi.routeMiddleware(req, res, next);
         });
+
 
         it('should route a valid request with paraneters', function() {
 
@@ -267,6 +304,44 @@ describe('Sofiapi Utilitiy Methods', function() {
                 var pathObj = _routeData[0];
                 assert.equal(pathObj.RoutePath,req.path);
                 // should return the matching route
+            };
+
+            sofiapi.routeMiddleware(req, res, next);
+        });
+
+        it('should handle an error for a request with invalid paraneters', function() {
+
+            var nextCount = 0;
+            var statusCount = 0;
+            var endCount = 0;
+            function next(err) {
+                if(err) {
+                    console.log('Err: ' + err);
+                }
+                
+                nextCount++;
+
+                assert.equal(nextCount,1);
+                assert.equal(statusCount,0);
+                assert.equal(endCount,0);
+            }
+
+            var req = {};
+            
+            req.path = '/api/routes/getall';
+            req.query = { PageNo: '-1' }; // should return simulated error.
+            
+
+            var res = { writable: true};
+
+            res.status = function status(code) {
+                statusCount++;
+                assert.equal(code,200);
+                return res;
+            };
+
+            res.end = function end(result) {
+                endCount++;
             };
 
             sofiapi.routeMiddleware(req, res, next);
@@ -388,6 +463,44 @@ describe('Sofiapi Utilitiy Methods', function() {
             sofiapi.configure({}, Connection, Request, consoleLogger);
             sofiapi.routeMiddleware(req, res, next);
         });
+
+        it('should call handleError when request fails with invalid path.', function() {
+            var nextCount = 0;
+            var statusCount = 0;
+            var endCount = 0;
+            function next(err) {
+                if(err) {
+                    console.log('Err: ' + err);
+                }
+                
+                nextCount++;
+
+                assert.equal(nextCount,1);
+                assert.equal(statusCount,0);
+                assert.equal(endCount,0);
+            }
+
+            var req = {};
+            req.path = '/api/path-does-not-exist';
+
+            var res = {};
+
+            res.status = function status(code) {
+                statusCount++;
+                assert.equal(code,200);
+                return res;
+                
+            };
+
+            res.end = function end(result) {
+                var _routeData = JSON.parse(result);
+                var pathObj = _routeData[0];
+                assert.equal(pathObj.RoutePath,req.path);
+                endCount++;
+            };
+            sofiapi.configure({}, Connection, Request, consoleLogger);
+            sofiapi.routeMiddleware(req, res, next);
+        });        
     });
 
 
