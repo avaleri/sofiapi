@@ -4,6 +4,52 @@ var Request = null
 var TYPES = require('tedious').TYPES;
 var config = {};
 var logger = {};
+
+var authenticate = function(req) { 
+    if(req.isAuthenticated && typeof req.isAuthenticated === 'function') {
+        return req.isAuthenticated();
+    }
+    return true;
+}
+// if no implementation specified, check for passport style authentication, othewrwise default to authenticated.
+
+var authorize = function(authString, req) 
+{ 
+    if (authString && authString.length > 0) {
+        if (!req.user) {
+            fail();
+        }
+        else if (req.user) {
+            var roles = req.user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+            if (roles && roles.length > 0) {
+                var allowed = false;
+                var allowedRoles = authString.split(',');
+                for (var i = 0; i < allowedRoles.length; i++) {
+                    for (var j = 0; j < roles.length; j++) {
+                        if (allowedRoles[i] == roles[j]) {
+                            return true;
+                        }
+                    }
+                }
+
+                if (allowed == false) {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+    } // only do check if valid authString is passed.
+    return false;
+}
+// if no implementation specified, allow all the requests.
+
+var accessDenied = function(req, res) {
+    res.status(401).end(); // send access denied
+}
+// default access denied (send 401 response)
+
 logger.log = function(level,msg) {}; // default to no-op.
 
 function buildParams(keys, sourceObj, output) {
@@ -136,23 +182,41 @@ function executeRoute(req, output, res, next) {
     // console.log(JSON.stringify(output)); 
     // used to store results for testing purposes
 
-   var params = getParams(req, output);
-   if(params && params.length > 0) {
-      logger.log('debug',params);
-      var contextInfo = {};
-      contextInfo.ProcName = params[0].ROUTINE_NAME;
-      contextInfo.Paraneters = JSON.stringify(params);
-      req.AppContext = contextInfo;   
-      executeProc(params[0].ROUTINE_NAME, params, res, next);
+   var isAuthorized = true;
+   if(output.metadata.PublicRoute == false) {
+        if (!authenticate()) {
+            return next();
+        }
+        // if the route is not anonymous, ensure that the request is authenticated
+
+        if(output.metadata.PermissionList && output.metadata.PermissionList.length > 0) {
+            // this route has a list of allowed roles specified.
+            isAuthorized = authorize(output.metadata.PermissionList, req, res, next);
+            if(isAuthorized == false) {
+                accessDenied(req,res);
+            }
+        }
    }
-   else {
-       if(output.metadata.AllowNoParameters == 1) {
-        params = null;
-        executeProc(output.metadata.RouteCommand, params, res, next);
-       }
-       else {
-          next();
-       }
+
+   if(isAuthorized) {
+   var params = getParams(req, output);
+    if(params && params.length > 0) {
+        logger.log('debug',params);
+        var contextInfo = {};
+        contextInfo.ProcName = params[0].ROUTINE_NAME;
+        contextInfo.Paraneters = JSON.stringify(params);
+        req.AppContext = contextInfo;   
+        executeProc(params[0].ROUTINE_NAME, params, res, next);
+    }
+    else {
+        if(output.metadata.AllowNoParameters == 1) {
+            params = null;
+            executeProc(output.metadata.RouteCommand, params, res, next);
+        }
+        else {
+            return next();
+        }
+    }
    }
 };
 
@@ -194,7 +258,7 @@ function getRoute(req, res, next) {
            executeRoute(req,routeData,res,next);
         }
         else {
-            next();
+            return next();
         }
     });
 
@@ -236,11 +300,23 @@ function routeMiddleware(req, res, next) {
 }
 
 
-function configure(_config, _Connection, _Request, _logger) {
+function configure(_config, _Connection, _Request, _logger, _authenticate, _authorize, _accessDenied) {
     config = _config;
     Connection = _Connection;
     Request = _Request;
     logger = _logger;
+
+    if(_authenticate) {
+        authenticate = _authenticate;
+    }
+
+    if(_authorize) {
+        authorize = _authorize;
+    }
+
+    if(_accessDenied) {
+        accessDenied = _accessDenied;
+    }
 }
 
 module.exports = {

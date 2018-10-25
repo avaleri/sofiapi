@@ -387,10 +387,13 @@
                         },
                         body: JSON.stringify(updateData)
                     }).then(function(response) {
-                        return response.json();
-                    }).then(function(data) {
-
-                        window.location = window.location;
+                        if (response.ok) {
+                            alert('Route deleted.');
+                            window.location = window.location;
+                        }
+                        else {
+                            alert('An error occurred while processing your request.');
+                        }
                     });
                }
             }
@@ -431,12 +434,12 @@
                 routeCommand.value = data.RouteCommand;
                 allowNoParameters.checked = false;
 
-                if(data.AllowNoParameters) {
+                if(data.AllowNoParameters === 'True') {
                     allowNoParameters.checked = true;
                 }
 
                 publicRoute.checked = false;
-                if(data.PublicRoute) {
+                if(data.PublicRoute === 'True') {
                     publicRoute.checked = true;
                 }
 
