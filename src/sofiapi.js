@@ -184,7 +184,7 @@ function executeRoute(req, output, res, next) {
 
    var isAuthorized = true;
    if(output.metadata.PublicRoute == false) {
-        if (!authenticate()) {
+        if (!authenticate(req)) {
             return next();
         }
         // if the route is not anonymous, ensure that the request is authenticated
