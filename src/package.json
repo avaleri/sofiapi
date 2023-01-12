@@ -19,7 +19,7 @@
     "express": "^4.16.3",
     "mocha": "^5.2.0",
     "password-generator": "^2.2.0",
-    "strict-password-generator": "^1.1.1",
+    "strict-password-generator": "^1.1.2",
     "tedious": "^2.6.1",
     "winston": "^3.1.0"
   },
